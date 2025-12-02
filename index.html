@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Тестирование API задач</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+
+    input,
+    textarea,
+    select {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+
+    button {
+      background: #007bff;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #0056b3;
+    }
+
+    .response {
+      margin-top: 20px;
+      padding: 15px;
+      background: #f8f9fa;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      white-space: pre-wrap;
+    }
+
+    .tabs {
+      display: flex;
+      margin-bottom: 20px;
+    }
+
+    .tab {
+      padding: 10px 20px;
+      cursor: pointer;
+      border: 1px solid #ddd;
+      margin-right: 5px;
+    }
+
+    .tab.active {
+      background: #007bff;
+      color: white;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h1>Тестирование API задач</h1>
+
+    <div class="tabs">
+      <div class="tab active" onclick="showTab('get-all')">Все задачи</div>
+      <div class="tab" onclick="showTab('get-one')">Одна задача</div>
+      <div class="tab" onclick="showTab('create')">Создать</div>
+      <div class="tab" onclick="showTab('update')">Обновить</div>
+      <div class="tab" onclick="showTab('delete')">Удалить</div>
+    </div>
+
+    <!-- Вкладка: Получить все задачи -->
+    <div id="get-all" class="tab-content active">
+      <h3>Получить все задачи</h3>
+      <button onclick="getAllTasks()">Получить все задачи</button>
+    </div>
+
+    <!-- Вкладка: Получить одну задачу -->
+    <div id="get-one" class="tab-content">
+      <h3>Получить задачу по ID</h3>
+      <div class="form-group">
+        <label>ID задачи:</label>
+        <input type="number" id="task-id" value="1">
+      </div>
+      <button onclick="getTask()">Получить задачу</button>
+    </div>
+
+    <!-- Вкладка: Создать задачу -->
+    <div id="create" class="tab-content">
+      <h3>Создать новую задачу</h3>
+      <div class="form-group">
+        <label>Заголовок:*</label>
+        <input type="text" id="create-title" placeholder="Введите заголовок" required>
+      </div>
+      <div class="form-group">
+        <label>Описание:</label>
+        <textarea id="create-description" rows="3" placeholder="Введите описание"></textarea>
+      </div>
+      <div class="form-group">
+        <label>Статус:</label>
+        <select id="create-status">
+          <option value="pending">Ожидает</option>
+          <option value="in_progress">В процессе</option>
+          <option value="completed">Завершена</option>
+        </select>
+      </div>
+      <button onclick="createTask()">Создать задачу</button>
+    </div>
+
+    <!-- Вкладка: Обновить задачу -->
+    <div id="update" class="tab-content">
+      <h3>Обновить задачу</h3>
+      <div class="form-group">
+        <label>ID задачи:</label>
+        <input type="number" id="update-id" value="1">
+      </div>
+      <div class="form-group">
+        <label>Новый заголовок:</label>
+        <input type="text" id="update-title" placeholder="Новый заголовок">
+      </div>
+      <div class="form-group">
+        <label>Новое описание:</label>
+        <textarea id="update-description" rows="3" placeholder="Новое описание"></textarea>
+      </div>
+      <div class="form-group">
+        <label>Новый статус:</label>
+        <select id="update-status">
+          <option value="">Не изменять</option>
+          <option value="pending">Ожидает</option>
+          <option value="in_progress">В процессе</option>
+          <option value="completed">Завершена</option>
+        </select>
+      </div>
+      <button onclick="updateTask()">Обновить задачу</button>
+    </div>
+
+    <!-- Вкладка: Удалить задачу -->
+    <div id="delete" class="tab-content">
+      <h3>Удалить задачу</h3>
+      <div class="form-group">
+        <label>ID задачи:</label>
+        <input type="number" id="delete-id" value="1">
+      </div>
+      <button onclick="deleteTask()" style="background: #dc3545;">Удалить задачу</button>
+    </div>
+
+    <h3>Ответ API:</h3>
+    <div class="response" id="response">
+      Нажмите любую кнопку для тестирования...
+    </div>
+  </div>
+
+  <script>
+    // Переключение вкладок
+    function showTab(tabName) {
+      // Скрыть все вкладки
+      document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.classList.remove('active');
+      });
+      document.querySelectorAll('.tab').forEach(tab => {
+        tab.classList.remove('active');
+      });
+
+      // Показать выбранную
+      document.getElementById(tabName).classList.add('active');
+      event.target.classList.add('active');
+    }
+
+    // Отобразить ответ
+    function showResponse(data) {
+      document.getElementById('response').innerHTML =
+        '<strong>Статус:</strong> ' + data.status + '\n\n' +
+        '<strong>Ответ:</strong>\n' + JSON.stringify(data.data, null, 2);
+    }
+
+    // 1. Получить все задачи
+    function getAllTasks() {
+      fetch('api.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'get_all' })
+      })
+        .then(response => {
+          const status = response.status;
+          return response.json().then(data => ({ status, data }));
+        })
+        .then(result => showResponse(result))
+        .catch(error => {
+          document.getElementById('response').innerHTML = 'Ошибка: ' + error;
+        });
+    }
+
+    // 2. Получить одну задачу
+    function getTask() {
+      const id = document.getElementById('task-id').value;
+      fetch('api.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'get_one',
+          id: parseInt(id)
+        })
+      })
+        .then(response => {
+          const status = response.status;
+          return response.json().then(data => ({ status, data }));
+        })
+        .then(result => showResponse(result))
+        .catch(error => {
+          document.getElementById('response').innerHTML = 'Ошибка: ' + error;
+        });
+    }
+
+    // 3. Создать задачу
+    function createTask() {
+      const title = document.getElementById('create-title').value;
+      const description = document.getElementById('create-description').value;
+      const status = document.getElementById('create-status').value;
+
+      if (!title.trim()) {
+        alert('Введите заголовок задачи!');
+        return;
+      }
+
+      fetch('api.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'create',
+          title: title,
+          description: description,
+          status: status
+        })
+      })
+        .then(response => {
+          const status = response.status;
+          return response.json().then(data => ({ status, data }));
+        })
+        .then(result => showResponse(result))
+        .catch(error => {
+          document.getElementById('response').innerHTML = 'Ошибка: ' + error;
+        });
+    }
+
+    // 4. Обновить задачу
+    function updateTask() {
+      const id = document.getElementById('update-id').value;
+      const title = document.getElementById('update-title').value;
+      const description = document.getElementById('update-description').value;
+      const status = document.getElementById('update-status').value;
+
+      const data = { action: 'update', id: parseInt(id) };
+
+      if (title.trim()) data.title = title;
+      if (description.trim()) data.description = description;
+      if (status) data.status = status;
+
+      fetch('api.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      })
+        .then(response => {
+          const status = response.status;
+          return response.json().then(data => ({ status, data }));
+        })
+        .then(result => showResponse(result))
+        .catch(error => {
+          document.getElementById('response').innerHTML = 'Ошибка: ' + error;
+        });
+    }
+
+    // 5. Удалить задачу
+    function deleteTask() {
+      const id = document.getElementById('delete-id').value;
+
+      if (!confirm('Вы уверены, что хотите удалить задачу #' + id + '?')) {
+        return;
+      }
+
+      fetch('api.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'delete',
+          id: parseInt(id)
+        })
+      })
+        .then(response => {
+          const status = response.status;
+          return response.json().then(data => ({ status, data }));
+        })
+        .then(result => showResponse(result))
+        .catch(error => {
+          document.getElementById('response').innerHTML = 'Ошибка: ' + error;
+        });
+    }
+
+    // Загрузить задачи при открытии страницы
+    getAllTasks();
+  </script>
+</body>
+
+</html>
